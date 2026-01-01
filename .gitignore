@@ -1,0 +1,18 @@
+# Python virtual environment
+.venv/
+
+# IDE / editor
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local debug / temp files
+debug_api_response.json
+
+# OS junk
+.DS_Store
+
+# Logs (just in case)
+*.log
