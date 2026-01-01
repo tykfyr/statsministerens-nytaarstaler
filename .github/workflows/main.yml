@@ -1,0 +1,58 @@
+name: fetch statsministerens nytårstale
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Kør 1. januar flere gange (UTC). Scriptet committer kun ved ændringer.
+    - cron: "10,40 07 01 01 *"
+    - cron: "10,40 12 01 01 *"
+    - cron: "10,40 18 01 01 *"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: run fetcher
+        run: |
+          python fetch.py
+
+      - name: commit & push (if changes)
+        run: |
+          echo "pwd: $(pwd)"
+          ls -la
+          ls -la taler || true
+          ls -la debug_api_response.json || true
+
+          echo "git status:"
+          git status --porcelain=v1
+
+          if [ -z "$(git status --porcelain=v1)" ]; then
+            echo "No changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "add latest nytårstale"
+          git push
